@@ -92,7 +92,6 @@ func TestGetMailConfig(t *testing.T) {
 						"sender":     "me@example.com",
 						"from":       "another_me@example.com",
 						"recipients": []interface{}{"my-cto@example.com", "my-friend@example.com"},
-						"subject":    "[Required Approval] Deploy Dataprima Backend v1.1 to Production",
 					},
 				},
 				Secrets: []*notifiers.Secret{{LocalName: "my-smtp-password", ResourceName: "/does/not/matter"}},
@@ -104,7 +103,6 @@ func TestGetMailConfig(t *testing.T) {
 				sender:     "me@example.com",
 				from:       "another_me@example.com",
 				recipients: []string{"my-cto@example.com", "my-friend@example.com"},
-				subject:    "[Required Approval] Deploy Dataprima Backend v1.1 to Production",
 			},
 		}, {
 			name: "server is missing",
@@ -116,7 +114,6 @@ func TestGetMailConfig(t *testing.T) {
 						"sender":     "me@example.com",
 						"from":       "another_me@example.com",
 						"recipients": []interface{}{"my-cto@example.com", "my-friend@example.com"},
-						"subject":    "[Required Approval] Deploy Dataprima Backend v1.1 to Production",
 					},
 				},
 				Secrets: []*notifiers.Secret{{LocalName: "my-smtp-password", ResourceName: "/does/not/matter"}},
@@ -161,7 +158,6 @@ spec:
       recipients:
         - some-eng@example.com
         - me@example.com
-      subject: "[Required Approval] Deploy Dataprima Backend v1.1 to Production"
   secrets:
     - name: smtp-password
       value: projects/some-project/secrets/smtp-notifier-password/versions/latest
@@ -174,7 +170,6 @@ spec:
 		sender:     "my-notifier@example.com",
 		from:       "my-notifier-from@example.com",
 		recipients: []string{"some-eng@example.com", "me@example.com"},
-		subject:    "[Required Approval] Deploy Dataprima Backend v1.1 to Production",
 	}
 
 	cfg := new(notifiers.Config)
