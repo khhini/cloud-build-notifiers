@@ -133,6 +133,11 @@ func getMailConfig(ctx context.Context, sg notifiers.SecretGetter, spec *notifie
 		return mailConfig{}, fmt.Errorf("failed to get SMTP password: %w", err)
 	}
 
+	subject, ok := delivery["subject"].(string)
+	if !ok {
+		return mailConfig{}, fmt.Errorf("expected delivery config %v to have string field `subject`", delivery)
+	}
+
 	return mailConfig{
 		server:     server,
 		port:       port,
@@ -140,6 +145,7 @@ func getMailConfig(ctx context.Context, sg notifiers.SecretGetter, spec *notifie
 		from:       from,
 		password:   password,
 		recipients: recipients,
+		subject:    subject,
 	}, nil
 }
 
