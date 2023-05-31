@@ -179,7 +179,7 @@ func (s *smtpNotifier) buildEmail() (string, error) {
 		return "", err
 	}
 
-	subject := fmt.Sprintf("[Require Approval] Deployment %s %s to Production", build.Substitutions["_APP"], build.Substitutions["_APP_ROLE"])
+	subject := fmt.Sprintf("[Require Approval] Deployment %s %s %s to Production", build.Substitutions["_APP_NAME"], build.Substitutions["_APP_ROLE"], build.Substitutions["_APP_VERSION"])
 
 	header := make(map[string]string)
 	if s.mcfg.from != s.mcfg.sender {
