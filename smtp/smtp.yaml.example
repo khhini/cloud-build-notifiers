@@ -55,6 +55,7 @@ spec:
       - example-cto@gmail.com
       password:
         secretRef: smtp-password
+      subject: Build.Id
   secrets:
   - name: smtp-password
     value: projects/example-project/secrets/example-smtp-notifier-password/versions/latest
