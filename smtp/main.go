@@ -48,8 +48,8 @@ type smtpNotifier struct {
 }
 
 type mailConfig struct {
-	server, port, sender, from, password string
-	recipients                           []string
+	server, port, sender, from, password, subject string
+	recipients                                    []string
 }
 
 func (s *smtpNotifier) SetUp(ctx context.Context, cfg *notifiers.Config, cfgTemplate string, sg notifiers.SecretGetter, br notifiers.BindingResolver) error {
@@ -123,6 +123,11 @@ func getMailConfig(ctx context.Context, sg notifiers.SecretGetter, spec *notifie
 		return mailConfig{}, fmt.Errorf("failed to get SMTP password: %w", err)
 	}
 
+	subject, ok := delivery["subject"].(string)
+	if !ok {
+		return mailConfig{}, fmt.Errorf("expected delivery config %v to have string field `subject`", delivery)
+	}
+
 	return mailConfig{
 		server:     server,
 		port:       port,
@@ -130,6 +135,7 @@ func getMailConfig(ctx context.Context, sg notifiers.SecretGetter, spec *notifie
 		from:       from,
 		password:   password,
 		recipients: recipients,
+		subject:    subject,
 	}, nil
 }
 
@@ -179,7 +185,7 @@ func (s *smtpNotifier) buildEmail() (string, error) {
 		return "", err
 	}
 
-	subject := fmt.Sprintf("Cloud Build [%s]: %s", build.ProjectId, build.Id)
+	subject := s.mcfg.subject
 
 	header := make(map[string]string)
 	if s.mcfg.from != s.mcfg.sender {
