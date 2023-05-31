@@ -196,7 +196,6 @@ func (s *smtpNotifier) buildEmail() (string, error) {
 	} else {
 		subject = fmt.Sprintf("[Deployment %s] %s %s %s to Production", build.Status, build.Substitutions["_APP_NAME"], build.Substitutions["_APP_ROLE"], build.Substitutions["_APP_VERSION"])
 	}
-
 	header := make(map[string]string)
 	if s.mcfg.from != s.mcfg.sender {
 		header["Sender"] = s.mcfg.sender
