@@ -50,8 +50,8 @@ type smtpNotifier struct {
 }
 
 type mailConfig struct {
-	server, port, sender, from, password, subject string
-	recipients                                    []string
+	server, port, sender, from, password string
+	recipients                           []string
 }
 
 func (s *smtpNotifier) SetUp(ctx context.Context, cfg *notifiers.Config, cfgTemplate string, sg notifiers.SecretGetter, br notifiers.BindingResolver) error {
@@ -196,6 +196,7 @@ func (s *smtpNotifier) buildEmail() (string, error) {
 	} else {
 		subject = fmt.Sprintf("[Deployment %s] %s %s %s to Production", build.Status, build.Substitutions["_APP_NAME"], build.Substitutions["_APP_ROLE"], build.Substitutions["_APP_VERSION"])
 	}
+
 	header := make(map[string]string)
 	if s.mcfg.from != s.mcfg.sender {
 		header["Sender"] = s.mcfg.sender
