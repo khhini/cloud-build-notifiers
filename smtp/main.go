@@ -19,10 +19,10 @@ import (
 	"context"
 	"fmt"
 	htmlTemplate "html/template"
-	textTemplate "text/template"
 	"mime/quotedprintable"
 	"net/smtp"
 	"strings"
+	textTemplate "text/template"
 
 	cbpb "cloud.google.com/go/cloudbuild/apiv1/v2/cloudbuildpb"
 	"github.com/GoogleCloudPlatform/cloud-build-notifiers/lib/notifiers"
@@ -169,6 +169,9 @@ func (s *smtpNotifier) sendSMTPNotification() error {
 	addr := fmt.Sprintf("%s:%s", s.mcfg.server, s.mcfg.port)
 	auth := smtp.PlainAuth("", s.mcfg.sender, s.mcfg.password, s.mcfg.server)
 
+  log.Infof("%v", s.mcfg.recipients)
+  log.Infof(strings.Join(s.mcfg.recipients, ","))
+
 	if err = smtp.SendMail(addr, auth, s.mcfg.from, s.mcfg.recipients, []byte(email)); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
@@ -189,13 +192,21 @@ func (s *smtpNotifier) buildEmail() (string, error) {
 		return "", err
 	}
 
-	var subject string
+  subject := fmt.Sprintf("Cloud Build [%s]: %s", build.ProjectId, build.Id)
+	if s.textTmpl != nil {
+		subjectTmpl := new(bytes.Buffer)
+		if err := s.textTmpl.Execute(subjectTmpl, s.tmplView); err != nil {
+			return "", err
+		}
 
-	if build.Status.String() == "PENDING" {
-		subject = fmt.Sprintf("[Require Approval] Deployment %s %s %s to Production", build.Substitutions["_APP_NAME"], build.Substitutions["_APP_ROLE"], build.Substitutions["_APP_VERSION"])
-	} else {
-		subject = fmt.Sprintf("[Deployment %s] %s %s %s to Production", build.Status, build.Substitutions["_APP_NAME"], build.Substitutions["_APP_ROLE"], build.Substitutions["_APP_VERSION"])
+		// Escape any string formatter
+		subject = strings.Join(strings.Fields(subjectTmpl.String()), " ")
 	}
+
+  commitUser := build.Substitutions["_COMMIT_USER"]
+  additionalRecipients := build.Substitutions["_ADDITIONAL_RECIPIENTS"]
+  newRecipients := combineAdditionalRecipients(s.mcfg.recipients, commitUser, additionalRecipients)
+  s.mcfg.recipients = newRecipients 
 
 	header := make(map[string]string)
 	if s.mcfg.from != s.mcfg.sender {
@@ -225,3 +236,38 @@ func (s *smtpNotifier) buildEmail() (string, error) {
 
 	return msg, nil
 }
+
+func combineAdditionalRecipients(originalRecipients []string, commitUser string, additionalRecipients string) []string {
+	// Create a map to store unique email addresses
+	emailSet := make(map[string]struct{})
+
+	// Add commitUser to the set
+	commitUser = strings.TrimSpace(commitUser)
+	if commitUser != "" {
+		emailSet[commitUser] = struct{}{}
+	}
+
+	// Add additionalRecipients to the set, splitting by comma
+  if additionalRecipients != "" {
+    for _, email := range strings.Split(additionalRecipients, ",") {
+      email = strings.TrimSpace(email)
+      emailSet[email] = struct{}{}
+    }
+  }
+
+	// Add recipients from the slice to the set
+	for _, email := range originalRecipients {
+		email = strings.TrimSpace(email)
+		emailSet[email] = struct{}{}
+	}
+
+	// Create a slice to store unique emails
+	var uniqueEmails []string
+	for email := range emailSet {
+		uniqueEmails = append(uniqueEmails, email)
+	}
+
+	// Join unique emails with commas and return
+	return uniqueEmails
+}
+
