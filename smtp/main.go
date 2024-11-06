@@ -206,14 +206,13 @@ func (s *smtpNotifier) buildEmail() (string, error) {
   commitUser := build.Substitutions["_COMMIT_USER"]
   additionalRecipients := build.Substitutions["_ADDITIONAL_RECIPIENTS"]
   newRecipients := combineAdditionalRecipients(s.mcfg.recipients, commitUser, additionalRecipients)
-  s.mcfg.recipients = newRecipients 
 
 	header := make(map[string]string)
 	if s.mcfg.from != s.mcfg.sender {
 		header["Sender"] = s.mcfg.sender
 	}
 	header["From"] = s.mcfg.from
-	header["To"] = strings.Join(s.mcfg.recipients, ",")
+	header["To"] = strings.Join(newRecipients, ",")
 	header["Subject"] = subject
 	header["MIME-Version"] = "1.0"
 	header["Content-Type"] = fmt.Sprintf(`%s; charset="utf-8"`, contentType)
